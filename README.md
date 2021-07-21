@@ -59,6 +59,15 @@ example.net, *.example.net {
 }
 ```
 
+By leaving hostname blank, passthrough mode is enabled:
+
+```
+# Uses example.com:443 as the backend
+example.com {
+	backend :443
+}
+```
+
 ### Optional parameters
 
 [HAProxy's PROXY protocol](https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt)

@@ -116,8 +116,16 @@ func (conn *Conn) dispatch() {
 	}
 
 bypassACLs:
+	host, port, err := net.SplitHostPort(backend.Address)
+	if len(host) == 0 {
+		host = sni
+	}
+	if err != nil {
+		conn.log(err)
+		return
+	}
 	upstream := func() *net.TCPConn {
-		up, err := net.DialTimeout("tcp", backend.Address, 3*time.Second)
+		up, err := net.DialTimeout("tcp", host+":"+port, 3*time.Second)
 		if err != nil {
 			conn.alert(tlsInternalError)
 			conn.log(err)
