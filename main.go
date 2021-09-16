@@ -18,12 +18,19 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 )
 
 var (
 	conf = flag.String("conf", "", "Configuration file.")
 	bind = flag.String("bind", ":443", "Address and port to bind to.")
 )
+
+func newRedirect(redirectPort string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://"+r.Host+redirectPort+r.RequestURI, http.StatusMovedPermanently)
+	}
+}
 
 func main() {
 	flag.Parse()
@@ -35,6 +42,12 @@ func main() {
 	if err := p.Config.ReadFile(*conf); err != nil {
 		log.Fatalf("Could not read config %q (%s)", *conf, err)
 	}
+
+	go func() {
+		if err := http.ListenAndServe(":80", http.HandlerFunc(newRedirect(*bind))); err != nil {
+			log.Fatalf("ListenAndServe error: %v", err)
+		}
+	}()
 
 	if err := p.ListenAndServe(*bind); err != nil {
 		log.Fatal(err)
